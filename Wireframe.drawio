@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-01-06T14:48:11.732Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.15" etag="KPTveD-ttmWmKQDDTBBE" version="22.1.17" type="github" pages="3">
+<mxfile host="app.diagrams.net" modified="2024-01-06T14:48:24.342Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.15" etag="BA2953w28seSywX4FVsj" version="22.1.17" type="github" pages="3">
   <diagram name="Main" id="soKR7CIwet9UzGEPgBhU">
     <mxGraphModel dx="1481" dy="1139" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
@@ -383,7 +383,7 @@
         <mxCell id="udDmU7BE7Jp5Ilwmu-Rb-2" value="" style="strokeWidth=1;shadow=0;dashed=0;align=center;html=1;shape=mxgraph.mockup.containers.browserWindow;rSize=0;strokeColor=#666666;strokeColor2=#008cff;strokeColor3=#c4c4c4;mainText=,;recursiveResize=0;" vertex="1" parent="udDmU7BE7Jp5Ilwmu-Rb-1">
           <mxGeometry width="1160" height="820" as="geometry" />
         </mxCell>
-        <mxCell id="udDmU7BE7Jp5Ilwmu-Rb-3" value="Log in" style="strokeWidth=1;shadow=0;dashed=0;align=center;html=1;shape=mxgraph.mockup.containers.anchor;fontSize=17;fontColor=#666666;align=left;whiteSpace=wrap;" vertex="1" parent="udDmU7BE7Jp5Ilwmu-Rb-2">
+        <mxCell id="udDmU7BE7Jp5Ilwmu-Rb-3" value="Register" style="strokeWidth=1;shadow=0;dashed=0;align=center;html=1;shape=mxgraph.mockup.containers.anchor;fontSize=17;fontColor=#666666;align=left;whiteSpace=wrap;" vertex="1" parent="udDmU7BE7Jp5Ilwmu-Rb-2">
           <mxGeometry x="52" y="12" width="120" height="26" as="geometry" />
         </mxCell>
         <mxCell id="udDmU7BE7Jp5Ilwmu-Rb-4" value="https://timeorganiser.co.uk" style="strokeWidth=1;shadow=0;dashed=0;align=center;html=1;shape=mxgraph.mockup.containers.anchor;rSize=0;fontSize=17;fontColor=#666666;align=left;" vertex="1" parent="udDmU7BE7Jp5Ilwmu-Rb-2">
