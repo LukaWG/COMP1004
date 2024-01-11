@@ -12,6 +12,7 @@ body {
 
 #calendar {
     margin: 1vh 1vw;
+    overflow-x: scroll;
 }
 
 #log-in-alert {
@@ -24,10 +25,19 @@ body {
     transition: top 0.5s ease-in-out;
 }
 
+#table {
+    table-layout: fixed;
+    min-width: 900px;
+}
+
 .centre-table {
     text-align: center;
 }
 
 .dates {
     height: 16px;
+}
+
+.no-border {
+    border: none;
 }

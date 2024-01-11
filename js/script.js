@@ -6,6 +6,13 @@ for (var i = 0; i < items.length; i++) {
     items[i].classList.add('disabled');
 }
 
+// Iterate through all items in the table and give them a grey background
+var items = document.getElementsByClassName('table-data');
+for (var i = 0; i < items.length; i++) {
+    items[i].style.backgroundColor = '#e2e2e2';
+    items[i].style.color = '#989898';
+}
+
 class Calendar_Data {
     constructor() {
         var date = new Date();
@@ -213,7 +220,7 @@ function login() {
         // items[i].classList.add('active');
     }
 
-    // Iterate through all items in the table and give them a grey background
+    // Iterate through all items in the table and give them a blank background
     var items = document.getElementsByClassName('table-data');
     for (var i = 0; i < items.length; i++) {
         items[i].style.backgroundColor = '';
@@ -251,9 +258,17 @@ function logout() {
 
     // Iterate through all items in the table and give them a grey background
     var items = document.getElementsByClassName('table-data');
-    for (var i = 0; i < items.length; i++) {
-        items[i].style.backgroundColor = '#e2e2e2';
-        items[i].style.color = '#989898';
+    if (window.theme == 'light') {
+        for (var i = 0; i < items.length; i++) {
+            items[i].style.backgroundColor = '#e2e2e2';
+            items[i].style.color = '#989898';
+        }
+    }
+    else {
+        for (var i = 0; i < items.length; i++) {
+            items[i].style.backgroundColor = '#3d434a';
+            items[i].style.color = '#787878';
+        }
     }
 }
 
@@ -462,13 +477,14 @@ function load_calendar() {
     var items = document.getElementsByClassName('table-data');
     for (var i = 0; i < items.length; i++) {
         items[i].classList.remove('table-primary');
+        items[i].classList.remove('no-border');
     }
     // Highlight today's date
     var today = calendar_data.get_today();
     
     if (today != 'none') {
         document.getElementById(today[0]).classList.add('table-primary');
-        // document.getElementById(today[1]).classList.add('table-primary');
+        document.getElementById(today[0]).classList.add('no-border');
     }
 }
 
@@ -493,11 +509,26 @@ function toggle_theme() {
     if (window.theme == 'light') {
         body.setAttribute('data-bs-theme', 'dark');
         window.theme = 'dark';
+        if (!window.isLoggedIn) {
+            var items = document.getElementsByClassName('table-data');
+            for (var i = 0; i < items.length; i++) {
+                items[i].style.backgroundColor = '#3d434a';
+                items[i].style.color = '#787878';
+            }
+        }
     }
     else {
         body.setAttribute('data-bs-theme', 'light');
         window.theme = 'light';
+        if (!window.isLoggedIn) {
+            var items = document.getElementsByClassName('table-data');
+            for (var i = 0; i < items.length; i++) {
+                items[i].style.backgroundColor = '#e2e2e2';
+                items[i].style.color = '#989898';
+            }
+        }
     }
 }
 
 expand_table();
+load_calendar();
