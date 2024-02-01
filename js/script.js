@@ -209,7 +209,31 @@ class Calendar_Data {
 
 const calendar_data = new Calendar_Data();
 
-function login() {
+function register() {
+    // Add user to database with required error checking
+
+    // If got this far then register successful
+
+
+}
+
+function login(username=null, password=null) {
+    // Check user database for user and password
+    if (username == null) {
+        username = document.getElementById('username').value;
+        console.log("|" + username + "|");
+    }
+    if (password == null) {
+        password = document.getElementById('password').value;
+        console.log(username);
+    }
+
+    // Check that both username and password are not blank
+    if (username == '' || password == '') {
+        return;
+    }
+
+    // If got this far then login successful
     window.isLoggedIn = true;
     document.getElementById('log-in-button').style.display = 'none';
     document.getElementById('log-out-button').style.display = 'block'; 
@@ -501,7 +525,7 @@ function expand_table() {
 }
 
 function hide_log_in_alert() {
-    document.getElementById('log-in-alert').style.top = '-70px';
+    document.getElementById('log-in--alert').style.top = '-70px';
 }
 
 function toggle_theme() {
@@ -532,3 +556,25 @@ function toggle_theme() {
 
 expand_table();
 load_calendar();
+
+var login_form = document.getElementById('login-form');
+login_form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    login();
+});
+
+// Detect when enter is clicked within login_form
+login_form.addEventListener('keyup', function(event) {
+    if (event.code == 'Enter') {
+        event.preventDefault();
+        login();
+    }
+});
+
+// Detect when enter is clicked within register_form
+login_form.addEventListener('keyup', function(event) {
+    if (event.code == 'Enter') {
+        event.preventDefault();
+        register();
+    }
+});

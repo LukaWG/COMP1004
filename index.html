@@ -145,7 +145,7 @@
                 <div class="modal-body">
                     <!-- Log in form -->
 
-                    <form class="needs-validation was-validated" novalidate="">
+                    <form class="needs-validation was-validated" novalidate="" id="login-form">
                         <div class="form-floating mb-3">
                             <input type="username" class="form-control" id="username" placeholder="Username" required>
                             <label for="username">Username</label>
@@ -179,7 +179,7 @@
                 <div class="modal-body">
                     <!-- Sign up form -->
 
-                    <form class="needs-validation was-validated" novalidate="">
+                    <form class="needs-validation was-validated" novalidate="" id="register-form">
                         <div class="form-floating mb-3">
                             <input type="username" class="form-control" id="username" placeholder="Username" required>
                             <label for="username">Username</label>
@@ -200,7 +200,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="login();">Sign up</button>
+                    <button type="button" class="btn btn-primary" onclick="register();">Sign up</button>
                 </div>
             </div>
         </div>
@@ -208,7 +208,7 @@
 
     <!-- Log in success notification -->
 
-    <div class="alert alert-success d-flex align-items-center" id="log-in-alert" role="alert" onclick="hide_log_in_alert();">Log in successful!</div>
+    <div class="alert alert-success d-flex align-items-center" class="alerts" id="log-in-alert" role="alert" onclick="hide_log_in_alert();">Log in successful!</div>
 
 
     <script src="js/script.js"></script>
