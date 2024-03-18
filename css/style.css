@@ -25,6 +25,16 @@ body {
     transition: top 0.5s ease-in-out;
 }
 
+#log-in-failed-alert {
+    position: absolute;
+    top: -70px;
+    left: 1vw;
+    width: 98vw;
+    z-index: 100;
+    max-height: 60px;
+    transition: top 0.5s ease-in-out;
+}
+
 #table {
     table-layout: fixed;
     min-width: 900px;

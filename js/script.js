@@ -220,25 +220,32 @@ function register() {
 }
 
 function find_user(username, password) {
-    // Create XMLHttpRequest object with username and password as POST data
-    var http = new XMLHttpRequest();
-    http.open('POST', '/find_user', true);
-    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    var parameters = JSON.stringify({ 'username': username, 'password': password });
-    http.send('data=' + parameters);
-    http.onreadystatechange = function() {
-        console.log(http);
-        if (http.readyState == 4 && (http.status == 200 || http.status == 201)) {
+    // Connect to server using socket (port 8000) and send username and password
+    var ws = new WebSocket('ws://localhost:8000');
 
-            if (http.response == 'true') {
-                return true;
-            }
-            else {
-                return false;
-            }
+    // Connection opened
+    ws.addEventListener('open', function (event) {
+        var data = {
+            task: 'login',
+            username: username,
+            password: password
+        };
+        ws.send(JSON.stringify(data));
+    });
+
+    // Listen for messages
+    ws.addEventListener('message', function (event) {
+        console.log('Message from server ', event.data);
+        if (event.data == 'true') {
+            login2();
+            return true;
         }
-    }
-
+        else {
+            console.log("HERE");
+            login_failed();
+            return false;
+        }
+    });
 }
 
 function login(username=null, password=null) {
@@ -255,47 +262,58 @@ function login(username=null, password=null) {
         return;
     }
     else {
-        var users_exists = find_user(username, password);
-        console.log(users_exists);
+        var user_exists = find_user(username, password);
+        if (!user_exists) {
+            return;
+        }
+    }
+}
+
+function login2() {
+    // If got this far then login successful
+    window.isLoggedIn = true;
+    document.getElementById('log-in-button').style.display = 'none';
+    document.getElementById('log-out-button').style.display = 'block'; 
+    // Iterate through every item in logged-in class and remove from disabled class
+    var items = document.getElementsByClassName('logged-in');
+    for (var i = 0; i < items.length; i++) {
+        items[i].classList.remove('disabled');
+        // items[i].classList.add('active');
     }
 
-    if (users_exists) {
-
-        // If got this far then login successful
-        window.isLoggedIn = true;
-        document.getElementById('log-in-button').style.display = 'none';
-        document.getElementById('log-out-button').style.display = 'block'; 
-        // Iterate through every item in logged-in class and remove from disabled class
-        var items = document.getElementsByClassName('logged-in');
-        for (var i = 0; i < items.length; i++) {
-            items[i].classList.remove('disabled');
-            // items[i].classList.add('active');
-        }
-
-        // Iterate through all items in the table and give them a blank background
-        var items = document.getElementsByClassName('table-data');
-        for (var i = 0; i < items.length; i++) {
-            items[i].style.backgroundColor = '';
-            items[i].style.color = '';
-        }
-
-        // Get width of log-out button and set width of log-in button to the same
-        var width = document.getElementById('log-out-button').offsetWidth;
-        document.getElementById('log-in-button').style.width = width + 'px';
-
-        // If got this far then log in successful
-        // Hide log in modal
-        $('#log-in-modal').modal('hide');
-
-        // show log in alert div
-        document.getElementById('log-in-alert').style.top = '2vh';
-
-        // Set timeout to hide alert
-        setTimeout(hide_log_in_alert, 3500);
-
-        // Load calendar
-        load_calendar();
+    // Iterate through all items in the table and give them a blank background
+    var items = document.getElementsByClassName('table-data');
+    for (var i = 0; i < items.length; i++) {
+        items[i].style.backgroundColor = '';
+        items[i].style.color = '';
     }
+
+    // Get width of log-out button and set width of log-in button to the same
+    var width = document.getElementById('log-out-button').offsetWidth;
+    document.getElementById('log-in-button').style.width = width + 'px';
+
+    // If got this far then log in successful
+    // Hide log in modal
+    $('#log-in-modal').modal('hide');
+
+    // show log in alert div
+    document.getElementById('log-in-alert').style.top = '2vh';
+
+    // Set timeout to hide alert
+    setTimeout(hide_log_in_alert, 3500);
+
+    // Load calendar
+    load_calendar();
+}
+
+function login_failed() {
+    // If got this far then log in failed
+    // show log in alert div
+    document.getElementById('log-in-failed-alert').style.top = '2vh';
+
+    // Set timeout to hide alert
+    setTimeout(hide_log_in_failed_alert, 3500);
+
 }
 
 function logout() {
@@ -555,6 +573,10 @@ function expand_table() {
 
 function hide_log_in_alert() {
     document.getElementById('log-in-alert').style.top = '-70px';
+}
+
+function hide_log_in_failed_alert() {
+    document.getElementById('log-in-failed-alert').style.top = '-70px';
 }
 
 function toggle_theme() {
