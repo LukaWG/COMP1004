@@ -1,3 +1,5 @@
+// https://thomasstep.com/blog/reading-and-writing-json-in-javascript - Reading and writing JSON in JavaScript
+
 window.isLoggedIn = false;
 window.theme = 'light';
 // Iterate through every item in logged-in class and add to disabled class
@@ -217,56 +219,83 @@ function register() {
 
 }
 
+function find_user(username, password) {
+    // Create XMLHttpRequest object with username and password as POST data
+    var http = new XMLHttpRequest();
+    http.open('POST', '/find_user', true);
+    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    var parameters = JSON.stringify({ 'username': username, 'password': password });
+    http.send('data=' + parameters);
+    http.onreadystatechange = function() {
+        console.log(http);
+        if (http.readyState == 4 && (http.status == 200 || http.status == 201)) {
+
+            if (http.response == 'true') {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+}
+
 function login(username=null, password=null) {
     // Check user database for user and password
     if (username == null) {
         username = document.getElementById('username').value;
-        console.log("|" + username + "|");
     }
     if (password == null) {
         password = document.getElementById('password').value;
-        console.log(username);
     }
 
     // Check that both username and password are not blank
     if (username == '' || password == '') {
         return;
     }
-
-    // If got this far then login successful
-    window.isLoggedIn = true;
-    document.getElementById('log-in-button').style.display = 'none';
-    document.getElementById('log-out-button').style.display = 'block'; 
-    // Iterate through every item in logged-in class and remove from disabled class
-    var items = document.getElementsByClassName('logged-in');
-    for (var i = 0; i < items.length; i++) {
-        items[i].classList.remove('disabled');
-        // items[i].classList.add('active');
+    else {
+        var users_exists = find_user(username, password);
+        console.log(users_exists);
     }
 
-    // Iterate through all items in the table and give them a blank background
-    var items = document.getElementsByClassName('table-data');
-    for (var i = 0; i < items.length; i++) {
-        items[i].style.backgroundColor = '';
-        items[i].style.color = '';
+    if (users_exists) {
+
+        // If got this far then login successful
+        window.isLoggedIn = true;
+        document.getElementById('log-in-button').style.display = 'none';
+        document.getElementById('log-out-button').style.display = 'block'; 
+        // Iterate through every item in logged-in class and remove from disabled class
+        var items = document.getElementsByClassName('logged-in');
+        for (var i = 0; i < items.length; i++) {
+            items[i].classList.remove('disabled');
+            // items[i].classList.add('active');
+        }
+
+        // Iterate through all items in the table and give them a blank background
+        var items = document.getElementsByClassName('table-data');
+        for (var i = 0; i < items.length; i++) {
+            items[i].style.backgroundColor = '';
+            items[i].style.color = '';
+        }
+
+        // Get width of log-out button and set width of log-in button to the same
+        var width = document.getElementById('log-out-button').offsetWidth;
+        document.getElementById('log-in-button').style.width = width + 'px';
+
+        // If got this far then log in successful
+        // Hide log in modal
+        $('#log-in-modal').modal('hide');
+
+        // show log in alert div
+        document.getElementById('log-in-alert').style.top = '2vh';
+
+        // Set timeout to hide alert
+        setTimeout(hide_log_in_alert, 3500);
+
+        // Load calendar
+        load_calendar();
     }
-
-    // Get width of log-out button and set width of log-in button to the same
-    var width = document.getElementById('log-out-button').offsetWidth;
-    document.getElementById('log-in-button').style.width = width + 'px';
-
-    // If got this far then log in successful
-    // Hide log in modal
-    $('#log-in-modal').modal('hide');
-
-    // show log in alert div
-    document.getElementById('log-in-alert').style.top = '2vh';
-
-    // Set timeout to hide alert
-    setTimeout(hide_log_in_alert, 3500);
-
-    // Load calendar
-    load_calendar();
 }
 
 function logout() {
@@ -525,7 +554,7 @@ function expand_table() {
 }
 
 function hide_log_in_alert() {
-    document.getElementById('log-in--alert').style.top = '-70px';
+    document.getElementById('log-in-alert').style.top = '-70px';
 }
 
 function toggle_theme() {
