@@ -1,5 +1,7 @@
 // https://thomasstep.com/blog/reading-and-writing-json-in-javascript - Reading and writing JSON in JavaScript
 
+var alertTimeout = {timeout: undefined, type: '', classRemove: undefined};
+
 window.isLoggedIn = false;
 window.theme = 'light';
 // Iterate through every item in logged-in class and add to disabled class
@@ -216,7 +218,7 @@ function register() {
 
     // If got this far then register successful
 
-
+    console.log("Register successful");
 }
 
 function find_user(username, password) {
@@ -238,11 +240,12 @@ function find_user(username, password) {
         console.log('Message from server ', event.data);
         if (event.data == 'true') {
             login2();
+            ws.close();
             return true;
         }
         else {
-            console.log("HERE");
             login_failed();
+            ws.close();
             return false;
         }
     });
@@ -297,10 +300,11 @@ function login2() {
     $('#log-in-modal').modal('hide');
 
     // show log in alert div
-    document.getElementById('log-in-alert').style.top = '2vh';
+    // document.getElementById('log-in-alert').style.top = '2vh';
+    show_alert('alert-success', 'Logged in successfully');
 
     // Set timeout to hide alert
-    setTimeout(hide_log_in_alert, 3500);
+    // setTimeout(hide_log_in_alert, 3500);
 
     // Load calendar
     load_calendar();
@@ -309,10 +313,11 @@ function login2() {
 function login_failed() {
     // If got this far then log in failed
     // show log in alert div
-    document.getElementById('log-in-failed-alert').style.top = '2vh';
+    // document.getElementById('log-in-failed-alert').style.top = '2vh';
+    show_alert('alert-danger', 'Log in failed');
 
     // Set timeout to hide alert
-    setTimeout(hide_log_in_failed_alert, 3500);
+    // setTimeout(hide_log_in_failed_alert, 3500);
 
 }
 
@@ -571,6 +576,47 @@ function expand_table() {
     document.getElementById('table').style.height = total + 'px';
 }
 
+function show_alert(type, text) {
+    console.log('show_alert');
+    // Clear previous alert timeout
+    if (alertTimeout.timeout != undefined) {
+        clearTimeout(alertTimeout.timeout);
+        alertTimeout.timeout = undefined;
+    }
+    if (alertTimeout.type != '') {
+        remove_alert_class(alertTimeout.type);
+    }
+    if (alertTimeout.classRemove != undefined) {
+        clearTimeout(alertTimeout.classRemove);
+        remove_alert_class();
+    }
+    // Set text of alert
+    document.getElementById('alert').innerHTML = text;
+    // show alert div
+    document.getElementById('alert').style.top = '2vh';
+    // add class type to alert
+    document.getElementById('alert').classList.add(type);
+    alertTimeout.type = type;
+    // Set timeout to hide alert
+    alertTimeout.timeout = setTimeout(hide_alert, 3500);
+
+    console.log('show_alert end');
+}
+
+function hide_alert() {
+    alertTimeout.timeout = undefined;
+
+    document.getElementById('alert').style.top = '-70px';
+    // remove class type from alert
+    alertTimeout.classRemove = setTimeout(remove_alert_class, 1000);
+}
+
+function remove_alert_class() {
+    document.getElementById('alert').classList.remove(alertTimeout.type);
+    alertTimeout.type = '';
+    alertTimeout.classRemove = undefined;
+}
+
 function hide_log_in_alert() {
     document.getElementById('log-in-alert').style.top = '-70px';
 }
@@ -622,8 +668,13 @@ login_form.addEventListener('keyup', function(event) {
     }
 });
 
+var register_form = document.getElementById('register-form');
+register_form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    register();
+});
 // Detect when enter is clicked within register_form
-login_form.addEventListener('keyup', function(event) {
+register_form.addEventListener('keyup', function(event) {
     if (event.code == 'Enter') {
         event.preventDefault();
         register();

@@ -31,43 +31,6 @@ http.createServer(function (request, response) {
         var css = fs.readFileSync('./css/style.css', 'utf8');
         response.write(css);
     }
-    else if (pathname == '/find_user') {
-        if (request.method === 'POST') {
-            let body = '';
-            request.on('data', (chunk) => {
-                body += chunk.toString();
-            });
-            request.on('end', () => {
-                const postData = qs.parse(body);
-                // Process the postData here
-                var data = JSON.parse(postData['data']);
-                var username = data['username'];
-                var password = data['password'];
-                
-                // Read ./private/users.json and check if the user exists and password matches
-                var userData = JSON.parse(fs.readFileSync('./private/data.json', 'utf8'));
-                var users = userData.users
-                var found = false;
-                for (var i = 0; i < users.length; i++) {
-                    if (users[i].username == username && users[i].password == password) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (found) {
-                    console.log(response.write('true'));
-                    console.log('User found');
-                }
-                else {
-                    response.write('false');
-                }
-            });
-        } else {
-            response.write('Invalid request');
-            response.end();
-        }
-    }
     
     response.end();
 }).listen(8080);
@@ -86,7 +49,7 @@ wss.on('connection', function connection(ws) {
 
         // convert received message to JSON object
         var data = JSON.parse(message);
-        console.log(data);
+        
         if (data.task == 'login') {
             var username = data['username'];
             var password = data['password'];
@@ -94,19 +57,55 @@ wss.on('connection', function connection(ws) {
             var userData = JSON.parse(fs.readFileSync('./private/data.json', 'utf8'));
             var users = userData.users
             var found = false;
+            var userfound = false;
+            var passwordcorrect = false;
             for (var i = 0; i < users.length; i++) {
-                if (users[i].username == username && users[i].password == password) {
-                    found = true;
+                if (users[i].username == username) {
+                    userfound = true;
+                    if (users[i].password == password) {
+                        passwordcorrect = true;
+                        found = true;
+                    }
                     break;
                 }
             }
 
             if (found) {
                 ws.send('true');
-                console.log('User found');
             }
             else {
+                if (!userfound) {
+                    ws.send('false|Username not found');
+                }
+                else if (!passwordcorrect) {
+                    ws.send('false|Incorrect password');
+                }
+                else {
+                ws.send('false|Login failed');
+                }
+            }
+        }
+        else if (data.task == 'register') {
+            var name = data['name'];
+            var username = data['username'];
+            var password = data['password'];
+            var userData = JSON.parse(fs.readFileSync('./private/data.json', 'utf8'));
+            var users = userData.users;
+            var found = false;
+            for (var i = 0; i < users.length; i++) {
+                if (users[i].username == username) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
                 ws.send('false');
+            }
+            else {
+                users.push({name: name, username: username, password: password});
+                userData.users = users;
+                fs.writeFileSync('./private/data.json', JSON.stringify(userData));
+                ws.send('true');
             }
         }
 
