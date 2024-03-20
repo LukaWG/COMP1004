@@ -215,10 +215,62 @@ const calendar_data = new Calendar_Data();
 
 function register() {
     // Add user to database with required error checking
+    // Check passwords match
+    var password = document.getElementById('passwordreg').value;
+    var password2 = document.getElementById('passwordreg2').value;
+    if (password != password2) {
+        show_alert('alert-danger', 'Passwords do not match');
+        return;
+    }
+    // Connect to server using socket (port 8000) and send username and password
+    var ws = new WebSocket('ws://localhost:8000');
 
+    // Connection opened
+    ws.addEventListener('open', function (event) {
+        var data = {
+            task: 'register',
+            name: document.getElementById('namereg').value,
+            username: document.getElementById('usernamereg').value,
+            password: password,
+        };
+        ws.send(JSON.stringify(data));
+    });
+
+    // Listen for messages
+    ws.addEventListener('message', function (event) {
+        console.log('Message from server ', event.data);
+        if (event.data == 'true') {
+            register2();
+            ws.close();
+            return true;
+        }
+        else {
+            // If first part of message is false then continue
+            if (event.data.substring(0, 5) == 'false') {
+                // Split message by | and show second part
+                var message = event.data.split('|');
+                show_alert('alert-danger', message[1]);
+                ws.close();
+                return false;
+            }
+        }
+    });
     // If got this far then register successful
 
     console.log("Register successful");
+}
+
+function register2() {
+    // If got this far then register successful
+    // Hide register modal
+    $('#register-modal').modal('hide');
+
+    // show register alert div
+    // document.getElementById('register-alert').style.top = '2vh';
+    show_alert('alert-success', 'Registered successfully');
+    login2(false);
+
+
 }
 
 function find_user(username, password) {
@@ -272,7 +324,7 @@ function login(username=null, password=null) {
     }
 }
 
-function login2() {
+function login2(alert=true) {
     // If got this far then login successful
     window.isLoggedIn = true;
     document.getElementById('log-in-button').style.display = 'none';
@@ -301,7 +353,9 @@ function login2() {
 
     // show log in alert div
     // document.getElementById('log-in-alert').style.top = '2vh';
-    show_alert('alert-success', 'Logged in successfully');
+    if (alert) {
+        show_alert('alert-success', 'Logged in successfully');
+    }
 
     // Set timeout to hide alert
     // setTimeout(hide_log_in_alert, 3500);

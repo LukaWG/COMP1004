@@ -89,6 +89,7 @@ wss.on('connection', function connection(ws) {
             var name = data['name'];
             var username = data['username'];
             var password = data['password'];
+            console.log(name, username, password);
             var userData = JSON.parse(fs.readFileSync('./private/data.json', 'utf8'));
             var users = userData.users;
             var found = false;
@@ -99,7 +100,7 @@ wss.on('connection', function connection(ws) {
                 }
             }
             if (found) {
-                ws.send('false');
+                ws.send('false|User already exists');
             }
             else {
                 users.push({name: name, username: username, password: password});
