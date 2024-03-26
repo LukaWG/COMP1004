@@ -6,7 +6,7 @@ body {
     height: 100vh;
 }
 
-#log-out-button {
+#log-in-button {
     display: none;
 }
 
@@ -60,4 +60,15 @@ body {
 
 .no-border {
     border: none;
+}
+
+#new-reminder-description {
+    height: auto;
+    resize: none;
+}
+
+#count_message {
+    background-color: smoke;
+    margin-top: -20px;
+    margin-right: 5px;
 }

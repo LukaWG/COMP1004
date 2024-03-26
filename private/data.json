@@ -1,1 +1,39 @@
-{"users":[{"username":"user","password":"pw"},{"username":"user2","password":"pw2"},{"name":"Luka","username":"lwg","password":"test"},{"name":"user","username":"user3","password":"test"}]}
+{
+    "users": [
+        {
+            "name": "Luka",
+            "username": "luka",
+            "password": "password"
+        },
+        {
+            "name": "Test User",
+            "username": "test",
+            "password": "pass"
+        },
+        {
+            "name": "Test User2",
+            "username": "test2",
+            "password": "pass"
+        },
+        {
+            "name": "Test User3",
+            "username": "test3",
+            "password": "pass"
+        },
+        {
+            "name": "Test User4",
+            "username": "test4",
+            "password": "pass"
+        },
+        {
+            "name": "Luka",
+            "username": "lwg",
+            "password": "password"
+        },
+        {
+            "name": "test",
+            "username": "user",
+            "password": "test"
+        }
+    ]
+}

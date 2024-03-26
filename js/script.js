@@ -223,7 +223,19 @@ function register() {
         return;
     }
     // Connect to server using socket (port 8000) and send username and password
-    var ws = new WebSocket('ws://localhost:8000');
+    // Get hostname and remove http:// or https:// and remove any trailing slashes and remove port
+    var hostname = window.location.hostname;
+    if (hostname.substring(0, 7) == 'http://') {
+        hostname = hostname.substring(7);
+    }
+    else if (hostname.substring(0, 8) == 'https://') {
+        hostname = hostname.substring(8);
+    }
+    while (hostname.substring(hostname.length - 1) == '/') {
+        hostname = hostname.substring(0, hostname.length - 1);
+    }
+
+    var ws = new WebSocket('ws://' + hostname + ':8000');
 
     // Connection opened
     ws.addEventListener('open', function (event) {
@@ -275,7 +287,19 @@ function register2() {
 
 function find_user(username, password) {
     // Connect to server using socket (port 8000) and send username and password
-    var ws = new WebSocket('ws://localhost:8000');
+    // Get hostname and remove http:// or https:// and remove any trailing slashes and remove port
+    var hostname = window.location.hostname;
+    if (hostname.substring(0, 7) == 'http://') {
+        hostname = hostname.substring(7);
+    }
+    else if (hostname.substring(0, 8) == 'https://') {
+        hostname = hostname.substring(8);
+    }
+    while (hostname.substring(hostname.length - 1) == '/') {
+        hostname = hostname.substring(0, hostname.length - 1);
+    }
+
+    var ws = new WebSocket('ws://' + hostname + ':8000');
 
     // Connection opened
     ws.addEventListener('open', function (event) {
@@ -708,6 +732,14 @@ function toggle_theme() {
 expand_table();
 load_calendar();
 
+// Get width of log-out button and set width of log-in button to the same
+var width = document.getElementById('log-out-button').offsetWidth;
+document.getElementById('log-in-button').style.width = width + 'px';
+
+// Set log out button to hidden and display log in button
+document.getElementById('log-out-button').style.display = 'none';
+document.getElementById('log-in-button').style.display = 'block';
+
 var login_form = document.getElementById('login-form');
 login_form.addEventListener('submit', function(event) {
     event.preventDefault();
@@ -734,3 +766,17 @@ register_form.addEventListener('keyup', function(event) {
         register();
     }
 });
+
+$('#log-in-modal').on('hidden.bs.modal', function () {
+    // Remove text from input boxes
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+})
+
+$('#register-modal').on('hidden.bs.modal', function () {
+    // Remove text from input boxes
+    document.getElementById('namereg').value = '';
+    document.getElementById('usernamereg').value = '';
+    document.getElementById('passwordreg').value = '';
+    document.getElementById('passwordreg2').value = '';
+})

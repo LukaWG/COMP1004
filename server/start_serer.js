@@ -90,7 +90,21 @@ wss.on('connection', function connection(ws) {
             var username = data['username'];
             var password = data['password'];
             console.log(name, username, password);
-            var userData = JSON.parse(fs.readFileSync('./private/data.json', 'utf8'));
+            var userFile = fs.readFileSync('./private/data.json', 'utf8');
+            // Check file conforms to JSON
+            try {
+                var userData = JSON.parse(userFile);
+            }
+            catch (e) {
+                console.log(e);
+                ws.send('false|Error reading user data');
+                return;
+            }
+            // Check that userData.users exists
+            if (!userData.users) {
+                // If userData.users does not exist, create it
+                userData.users = [];
+            }
             var users = userData.users;
             var found = false;
             for (var i = 0; i < users.length; i++) {
@@ -103,9 +117,13 @@ wss.on('connection', function connection(ws) {
                 ws.send('false|User already exists');
             }
             else {
+                // Console log time
+                console.log('Current time:', new Date());
+                console.log('users1:', users);
                 users.push({name: name, username: username, password: password});
+                console.log('users2:', users);
                 userData.users = users;
-                fs.writeFileSync('./private/data.json', JSON.stringify(userData));
+                fs.writeFileSync('./private/data.json', JSON.stringify(userData, null, 4));
                 ws.send('true');
             }
         }
