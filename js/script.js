@@ -1,6 +1,7 @@
 // TODO
-// [ ]: Read reminders from server
+// [X]: Read reminders from server
 // [ ]: Display reminders in calendar
+//      [ ]: Reminders display in correct cell without the text
 
 var alertTimeout = {timeout: undefined, type: '', classRemove: undefined};
 
@@ -18,6 +19,22 @@ for (var i = 0; i < items.length; i++) {
     items[i].style.backgroundColor = '#e2e2e2';
     items[i].style.color = '#989898';
 }
+
+// Template for reminder
+var reminder_template = `
+<!-- Display reminder: Checkmark and title, and then description underneath -->
+<div class="reminder logged-in card" id="reminder1">
+    <!-- Display check mark -->
+    <div class="card-header">
+        <input class="form-check-input me-2 lead align-items-center" type="checkbox" id="complete-reminder-1">
+        <span class="reminder-title lead align-items-center" id="reminder-title1">{{TITLE}}</span>
+    </div>
+    <div class="ms-1">
+        <!-- Hide data with ID of reminder -->
+        <span class="reminder-ID" aria-hidden="true" hidden>{{ID}}</span>
+        <span class="reminder-description" id="reminder-description1">{{DESCRIPTION}}</span>
+    </div>
+</div>`;
 
 class Calendar_Data {
     constructor() {
@@ -414,6 +431,9 @@ function login2(alert=true, name=undefined, username=undefined) {
     var width = document.getElementById('log-out-button').offsetWidth;
     document.getElementById('log-in-button').style.width = width + 'px';
 
+    // Load reminders
+    getReminders();
+
     // If got this far then log in successful
     // Hide log in modal
     $('#log-in-modal').modal('hide');
@@ -786,6 +806,13 @@ function newReminder() {
         return;
     }
 
+    // Check that title and description do not contain | character
+    if (title.includes('|') || description.includes('|')) {
+        // Show alert that title and description cannot contain |
+        show_alert('alert-danger', 'Title and description cannot contain |');
+        return;
+    }
+
     // Check that due date is in the future
     var today = new Date();
     var due_date = new Date(date);
@@ -877,6 +904,112 @@ function newReminder() {
     document.getElementById('new-reminder-description').value = '';
     // Load reminders
     loadReminders();
+}
+
+function getReminders() {
+    // Get reminders from server
+    // Get hostname and remove http:// or https:// and remove any trailing slashes and remove port
+    var hostname = window.location.hostname;
+    if (hostname.substring(0, 7) == 'http://') {
+        hostname = hostname.substring(7);
+    }
+    else if (hostname.substring(0, 8) == 'https://') {
+        hostname = hostname.substring(8);
+    }
+    while (hostname.substring(hostname.length - 1) == '/') {
+        hostname = hostname.substring(0, hostname.length - 1);
+    }
+
+    var ws = new WebSocket('ws://' + hostname + ':8000');
+
+    // Connection opened
+    ws.addEventListener('open', function (event) {
+        var data = {
+            task: 'get_reminders',
+            username: user.get_username(),
+        };
+        ws.send(JSON.stringify(data));
+    });
+
+    // Listen for messages
+    ws.addEventListener('message', function (event) {
+        console.log('Message from server ', event.data);
+        var message = event.data.split('|');
+        if (message[0] == 'true') {
+            console.log('Message is true');
+            // Split message by |
+            var reminders = JSON.parse(message[1]);
+            displayReminders(reminders);
+            ws.close();
+            return true;
+        }
+        else {
+            // If first part of message is false then continue
+            if (event.data.substring(0, 5) == 'false') {
+                // Split message by | and show second part
+                var message = event.data.split('|');
+                show_alert('alert-danger', message[1]);
+                ws.close();
+                return false;
+            }
+        }
+    });
+
+}
+
+function displayReminders(reminderslist) {
+    // Add reminders to reminders array
+    for (var i = 0; i < reminderslist.length; i++) {
+        var reminder = new Reminder(reminderslist[i].title, reminderslist[i].date, reminderslist[i].description);
+        reminders.push(reminder);
+    }
+    updateReminders();
+}
+
+function updateReminders() {
+    // Iterate through reminder class and delete
+    var items = document.getElementsByClassName('reminder');
+    while (items.length > 0) {
+        items[0].remove();
+    }
+
+    // Iterate through reminders array and add to reminders class
+    for (var i = 0; i < reminders.length; i++) {
+        var reminder = reminders[i];
+        var date = new Date(reminder.date);
+        var date_string = date.getDate() + ' ' + date.getMonth() + ' ' + date.getFullYear();
+
+        var reminderHTML = reminder_template.replace('{{title}}', reminder.title).replace('{{date}}', date_string).replace('{{description}}', reminder.description);
+
+        // Check if reminder date is displayed in current calendar view
+        var monday = calendar_data.monday;
+        var sunday = calendar_data.sunday2;
+        if (date >= monday && date <= sunday) {
+            // Calculating the time difference of two dates
+            let difference_in_time = date.getTime() - monday.getTime();
+
+            // Calculating the no. of days between two dates
+            let cellnum = Math.ceil(difference_in_time / (1000 * 3600 * 24)) + 1;
+
+            var cell_id = 'cal' + cellnum;
+            var cell = document.getElementById(cell_id);
+            cell.innerHTML = reminderHTML;
+        }
+
+
+        var reminder_div = document.createElement('div');
+        reminder_div.classList.add('reminder');
+        var title = document.createElement('p');
+        title.innerHTML = reminder.title;
+        var due_date = document.createElement('p');
+        due_date.innerHTML = date_string;
+        var description = document.createElement('p');
+        description.innerHTML = reminder.description;
+        reminder_div.appendChild(title);
+        reminder_div.appendChild(due_date);
+        reminder_div.appendChild(description);
+        document.getElementById('reminders').appendChild(reminder_div);
+    }
 }
 
 expand_table();

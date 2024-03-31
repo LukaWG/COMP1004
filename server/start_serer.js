@@ -149,10 +149,45 @@ wss.on('connection', function connection(ws) {
                 reminderData[username] = [];
             }
 
+            // Assign an ID to reminder that has not been used by the user before
+            var id = 1;
+            var found = false;
+            while (!found) {
+                found = true;
+                for (var i = 0; i < reminderData[username].length; i++) {
+                    if (reminderData[username][i].id == id) {
+                        found = false;
+                        id++;
+                        break;
+                    }
+                }
+            }
+
+            reminder.id = id;
+
             reminderData[username].push(reminder);
 
             fs.writeFileSync('./private/reminders.json', JSON.stringify(reminderData, null, 4));
             ws.send('true|Reminder added');
+        }
+        else if (data.task == 'get_reminders') {
+            var username = data['username'];
+            var reminderFile = fs.readFileSync('./private/reminders.json', 'utf8');
+            try {
+                var reminderData = JSON.parse(reminderFile);
+            }
+            catch (e) {
+                console.log(e);
+                ws.send('false|Error reading reminder data');
+                return;
+            }
+            if (!reminderData[username]) {
+                ws.send('true|No reminders');
+            }
+            else {
+                console.log("HERE");
+                ws.send(`true|${JSON.stringify(reminderData[username])}`);
+            }
         }
     });
 });

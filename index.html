@@ -103,7 +103,21 @@
                     <td class="centre-table table-data" id="date7"></td>
                 </tr>
                 <tr>
-                    <td class="table-data" id="cal1"></td>
+                    <td class="table-data" id="cal1">
+                        <!-- Display reminder: Checkmark and title, and then description underneath -->
+                        <div class="reminder logged-in card" id="reminder1">
+                            <!-- Display check mark -->
+                            <div class="card-header">
+                                <input class="form-check-input me-2 lead align-items-center" type="checkbox" id="complete-reminder-1">
+                                <span class="reminder-title lead align-items-center" id="reminder-title1">TITLE</span>
+                            </div>
+                            <div class="ms-1">
+                                <!-- Hide data with ID of reminder -->
+                                <span class="reminder-ID" aria-hidden="true" hidden>ID</span>
+                                <span class="reminder-description" id="reminder-description1">DESCRIPTION</span>
+                            </div>
+                        </div>
+                    </td>
                     <td class="table-data" id="cal2"></td>
                     <td class="table-data" id="cal3"></td>
                     <td class="table-data" id="cal4"></td>
