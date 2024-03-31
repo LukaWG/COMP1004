@@ -71,7 +71,7 @@ wss.on('connection', function connection(ws) {
             }
 
             if (found) {
-                ws.send('true');
+                ws.send(`true|${username}|${users[i].name}`);
             }
             else {
                 if (!userfound) {
@@ -124,9 +124,35 @@ wss.on('connection', function connection(ws) {
                 console.log('users2:', users);
                 userData.users = users;
                 fs.writeFileSync('./private/data.json', JSON.stringify(userData, null, 4));
-                ws.send('true');
+                ws.send(`true|${username}|${name}`);
             }
         }
+        else if (data.task == 'new_reminder') {
+            var username = data['username'];
+            var reminder = data['reminder'];
+            var attempts = data['attempts'];
+            var reminderFile = fs.readFileSync('./private/reminders.json', 'utf8');
+            try {
+                var reminderData = JSON.parse(reminderFile);
+            }
+            catch (e) {
+                console.log(e);
+                ws.send(`false|try_again|${attempts+1}|Error reading reminder data`);
+                return;
+            }
+            if (!reminderData) {
+                reminderData = {};
+            }
+            // Search for username in reminders and if user has no reminders, create an empty array
+            if (!reminderData[username]) {
+                // Create new reminder for username
+                reminderData[username] = [];
+            }
 
+            reminderData[username].push(reminder);
+
+            fs.writeFileSync('./private/reminders.json', JSON.stringify(reminderData, null, 4));
+            ws.send('true|Reminder added');
+        }
     });
 });

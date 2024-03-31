@@ -1,4 +1,6 @@
-// https://thomasstep.com/blog/reading-and-writing-json-in-javascript - Reading and writing JSON in JavaScript
+// TODO
+// [ ]: Read reminders from server
+// [ ]: Display reminders in calendar
 
 var alertTimeout = {timeout: undefined, type: '', classRemove: undefined};
 
@@ -213,6 +215,41 @@ class Calendar_Data {
 
 const calendar_data = new Calendar_Data();
 
+class Reminder {
+    constructor(title, date, description) {
+        this.date = date;
+        this.title = title;
+        this.description = description
+    }
+}
+
+var reminders = [];
+class User {
+    constructor() {
+        this.name = undefined;
+        this.username = undefined;
+        this.loggedIn = false;
+    }
+    logIn(name, username) {
+        this.name = name;
+        this.username = username;
+        this.loggedIn = true;
+    }
+    logOut() {
+        this.name = undefined;
+        this.username = undefined;
+        this.loggedIn = false;
+    }
+    get_name() {
+        return this.name;
+    }
+    get_username() {
+        return this.username;
+    }
+}
+
+var user = new User();
+
 function register() {
     // Add user to database with required error checking
     // Check passwords match
@@ -251,8 +288,9 @@ function register() {
     // Listen for messages
     ws.addEventListener('message', function (event) {
         console.log('Message from server ', event.data);
-        if (event.data == 'true') {
-            register2();
+        var message = event.data.split('|');
+        if (message[0] == 'true') {
+            register2(username=message[1], name=message[2]);
             ws.close();
             return true;
         }
@@ -272,7 +310,7 @@ function register() {
     console.log("Register successful");
 }
 
-function register2() {
+function register2(username=undefined, name=undefined) {
     // If got this far then register successful
     // Hide register modal
     $('#register-modal').modal('hide');
@@ -280,7 +318,7 @@ function register2() {
     // show register alert div
     // document.getElementById('register-alert').style.top = '2vh';
     show_alert('alert-success', 'Registered successfully');
-    login2(false);
+    login2(false, name=name, username=username);
 
 
 }
@@ -314,8 +352,11 @@ function find_user(username, password) {
     // Listen for messages
     ws.addEventListener('message', function (event) {
         console.log('Message from server ', event.data);
-        if (event.data == 'true') {
-            login2();
+        // Split event.data by |
+        var message = event.data.split('|');
+        if (message[0] == 'true') {
+            console.log(`USERNAME IS ${message[1]}, and NAME IS ${message[2]}`);
+            login2(true, name=message[2], username=message[1]);
             ws.close();
             return true;
         }
@@ -348,8 +389,10 @@ function login(username=null, password=null) {
     }
 }
 
-function login2(alert=true) {
+function login2(alert=true, name=undefined, username=undefined) {
     // If got this far then login successful
+    // Store user data in user object
+    user.logIn(name, username);
     window.isLoggedIn = true;
     document.getElementById('log-in-button').style.display = 'none';
     document.getElementById('log-out-button').style.display = 'block'; 
@@ -401,6 +444,7 @@ function login_failed() {
 
 function logout() {
     window.isLoggedIn = false;
+    user.logOut();
     document.getElementById('log-in-button').style.display = 'block';
     document.getElementById('log-out-button').style.display = 'none'; 
     // Iterate through every item in logged-in class and add to disabled class
@@ -727,6 +771,112 @@ function toggle_theme() {
             }
         }
     }
+}
+
+function newReminder() {
+    // Get title, due date, and description
+    var title = document.getElementById('new-reminder-title').value;
+    var date = document.getElementById('new-reminder-due-date').value;
+    var description = document.getElementById('new-reminder-description').value;
+
+    // Check that title and due date are not blank
+    if (title == '' || date == '') {
+        // Show alert that title and due date are required
+        show_alert('alert-danger', 'Title and due date are required');
+        return;
+    }
+
+    // Check that due date is in the future
+    var today = new Date();
+    var due_date = new Date(date);
+    if (due_date < today) {
+        // Show alert that due date is in the past
+        show_alert('alert-danger', 'Due date is in the past');
+        return;
+    }
+
+    // Create new reminder object
+    var reminder = new Reminder(title=title, date=date, description=description);
+    // Add reminder to database
+    reminders.push(reminder);
+    // Send reminder to server
+    // Get hostname and remove http:// or https:// and remove any trailing slashes and remove port
+    var hostname = window.location.hostname;
+    if (hostname.substring(0, 7) == 'http://') {
+        hostname = hostname.substring(7);
+    }
+    else if (hostname.substring(0, 8) == 'https://') {
+        hostname = hostname.substring(8);
+    }
+    while (hostname.substring(hostname.length - 1) == '/') {
+        hostname = hostname.substring(0, hostname.length - 1);
+    }
+
+    var ws = new WebSocket('ws://' + hostname + ':8000');
+
+    // Connection opened
+    ws.addEventListener('open', function (event) {
+        var data = {
+            task: 'new_reminder',
+            username: user.get_username(),
+            reminder: reminder,
+            attempts: 0,
+        };
+        console.log('Sending data');
+        console.log(data);
+        ws.send(JSON.stringify(data));
+    });
+
+    // Listen for messages
+
+    ws.addEventListener('message', function (event) {
+        console.log('Message from server ', event.data);
+        var message = event.data.split('|');
+        if (message[0] == 'true') {
+            ws.close();
+            return true;
+        }
+        else {
+            // If first part of message is false then continue
+            if (event.data.substring(0, 5) == 'false') {
+                message = event.data.split('|');
+                // Try again
+                if (message[1] == 'try_again') {
+                    if (message[2] == 'attempts') {
+                        if (message[3] < 3) {
+                            var data = {
+                                task: 'new_reminder',
+                                username: user.get_username(),
+                                reminder: reminder,
+                                attempts: message[3],
+                            };
+                            ws.send(JSON.stringify(data));
+                        }
+                        else {
+                            show_alert('alert-danger', 'Failed to add reminder');
+                            ws.close();
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    show_alert('alert-danger', 'Failed to add reminder');
+                    ws.close();
+                    return false;
+                }
+            }
+        }
+    });
+    // Hide new reminder modal
+    $('#new-reminder-modal').modal('hide');
+    // Show alert that reminder was added
+    show_alert('alert-success', 'Reminder added');
+    // Clear input boxes
+    document.getElementById('new-reminder-title').value = '';
+    document.getElementById('new-reminder-due-date').value = '';
+    document.getElementById('new-reminder-description').value = '';
+    // Load reminders
+    loadReminders();
 }
 
 expand_table();

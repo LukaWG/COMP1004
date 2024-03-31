@@ -145,12 +145,16 @@
                     <!-- Reminder needs a description, due date -->
                     <form class="needs-validation was-validated" novalidate="" id="new-reminder-form">
                         <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="new-reminder-title" placeholder="Title" required>
+                            <label for="new-reminder-title">Title</label>
+                        </div>
+                        <div class="form-floating mb-3">
                             <input type="date" class="form-control" id="new-reminder-due-date" required>
                             <label for="new-reminder-due-date">Due date</label>
                         </div>
                         <!-- Another input using text-area -->
                         <div class="form-floating mb-3">
-                            <textarea class="form-control" id="new-reminder-description" placeholder="Description" rows="2" maxlength="100" required></textarea>
+                            <textarea class="form-control" id="new-reminder-description" placeholder="Description" rows="3" maxlength="500" required></textarea>
                             <label for="new-reminder-notes">Description</label>
                         </div>
                 </div>
