@@ -189,5 +189,39 @@ wss.on('connection', function connection(ws) {
                 ws.send(`true|${JSON.stringify(reminderData[username])}`);
             }
         }
+
+        else if (data.task == 'complete_reminder') {
+            var username = data['username'];
+            var id = data['id'];
+            var reminderFile = fs.readFileSync('./private/reminders.json', 'utf8');
+            try {
+                var reminderData = JSON.parse(reminderFile);
+            }
+            catch (e) {
+                console.log(e);
+                ws.send('false|Error reading reminder data');
+                return;
+            }
+            if (!reminderData[username]) {
+                ws.send('false|No reminders');
+            }
+            else {
+                var found = false;
+                for (var i = 0; i < reminderData[username].length; i++) {
+                    if (reminderData[username][i].id == id) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    reminderData[username].splice(i, 1);
+                    fs.writeFileSync('./private/reminders.json', JSON.stringify(reminderData, null, 4));
+                    ws.send('true|Reminder completed');
+                }
+                else {
+                    ws.send('false|Reminder not found');
+                }
+            }
+        }
     });
 });

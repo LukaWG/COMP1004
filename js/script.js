@@ -26,13 +26,13 @@ var reminder_template = `
 <div class="reminder logged-in card" id="reminder1">
     <!-- Display check mark -->
     <div class="card-header">
-        <input class="form-check-input me-2 lead align-items-center" type="checkbox" id="complete-reminder-1">
+        <input class="form-check-input me-2 lead align-items-center" type="checkbox" id="complete-reminder-{{ID}}" onclick="submit_reminder(this)">
         <span class="reminder-title lead align-items-center" id="reminder-title1">{{TITLE}}</span>
     </div>
     <div class="ms-1">
         <!-- Hide data with ID of reminder -->
         <span class="reminder-ID" aria-hidden="true" hidden>{{ID}}</span>
-        <span class="reminder-description" id="reminder-description1">{{DESCRIPTION}}</span>
+        <span {{TOOLTIP}}class="reminder-description" id="reminder-description1">{{DESCRIPTION_SHORT}}</span>
     </div>
 </div>`;
 
@@ -102,7 +102,7 @@ class Calendar_Data {
         this.sunday2.setDate(this.sunday2.getDate() + 7);
 
         load_calendar();
-        load_events();
+        updateReminders();
     }
     previous_week() {
         this.monday.setDate(this.monday.getDate() - 7);
@@ -122,7 +122,7 @@ class Calendar_Data {
         this.sunday2.setDate(this.sunday2.getDate() - 7);
 
         load_calendar();
-        load_events();
+        updateReminders();
     }
     this_week() {
         var date = new Date();
@@ -171,7 +171,7 @@ class Calendar_Data {
         this.saturday2.setDate(this.saturday2.getDate() - 1);
 
         load_calendar();
-        load_events();
+        updateReminders();
     }
     get_today() {
         // Get today's date and work out which cell matches it
@@ -233,7 +233,8 @@ class Calendar_Data {
 const calendar_data = new Calendar_Data();
 
 class Reminder {
-    constructor(title, date, description) {
+    constructor(title, date, description, id=undefined) {
+        this.id = id;
         this.date = date;
         this.title = title;
         this.description = description
@@ -706,10 +707,6 @@ function load_calendar() {
     }
 }
 
-function load_events() {
-
-}
-
 // Use JS to calc height to the bottom of the page to expand the table
 function expand_table() {
     var height = document.getElementById('table').offsetHeight;
@@ -825,7 +822,7 @@ function newReminder() {
     // Create new reminder object
     var reminder = new Reminder(title=title, date=date, description=description);
     // Add reminder to database
-    reminders.push(reminder);
+    // reminders.push(reminder);
     // Send reminder to server
     // Get hostname and remove http:// or https:// and remove any trailing slashes and remove port
     var hostname = window.location.hostname;
@@ -861,6 +858,8 @@ function newReminder() {
         var message = event.data.split('|');
         if (message[0] == 'true') {
             ws.close();
+            // call getReminders to update reminders array in 0.5 seconds
+            setTimeout(getReminders, 500);
             return true;
         }
         else {
@@ -960,7 +959,7 @@ function getReminders() {
 function displayReminders(reminderslist) {
     // Add reminders to reminders array
     for (var i = 0; i < reminderslist.length; i++) {
-        var reminder = new Reminder(reminderslist[i].title, reminderslist[i].date, reminderslist[i].description);
+        var reminder = new Reminder(reminderslist[i].title, reminderslist[i].date, reminderslist[i].description, reminderslist[i].id);
         reminders.push(reminder);
     }
     updateReminders();
@@ -979,7 +978,24 @@ function updateReminders() {
         var date = new Date(reminder.date);
         var date_string = date.getDate() + ' ' + date.getMonth() + ' ' + date.getFullYear();
 
-        var reminderHTML = reminder_template.replace('{{title}}', reminder.title).replace('{{date}}', date_string).replace('{{description}}', reminder.description);
+        // If description more than 47 characters, remove 3 characters and add ...
+        var short_description;
+        var tooltip = false;
+        if (reminder.description.length > 47) {
+            short_description = reminder.description.substring(0, 44) + '...';
+            tooltip = true;
+        }
+        else {
+            short_description = reminder.description;
+        }
+
+        var reminderHTML = reminder_template.replace('{{ID}}', reminder.id).replace('{{TITLE}}', reminder.title).replace('{{DATE}}', date_string).replace('{{DESCRIPTION_SHORT}}', short_description);
+        if (tooltip) {
+            reminderHTML = reminderHTML.replace('{{TOOLTIP}}', 'data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="' + reminder.description + '"');
+        }
+        else {
+            reminderHTML = reminderHTML.replace('{{TOOLTIP}}', '');
+        }
 
         // Check if reminder date is displayed in current calendar view
         var monday = calendar_data.monday;
@@ -996,20 +1012,86 @@ function updateReminders() {
             cell.innerHTML = reminderHTML;
         }
 
+        enable_tooltips();
 
-        var reminder_div = document.createElement('div');
-        reminder_div.classList.add('reminder');
-        var title = document.createElement('p');
-        title.innerHTML = reminder.title;
-        var due_date = document.createElement('p');
-        due_date.innerHTML = date_string;
-        var description = document.createElement('p');
-        description.innerHTML = reminder.description;
-        reminder_div.appendChild(title);
-        reminder_div.appendChild(due_date);
-        reminder_div.appendChild(description);
-        document.getElementById('reminders').appendChild(reminder_div);
+        // var reminder_div = document.createElement('div');
+        // reminder_div.classList.add('reminder');
+        // var title = document.createElement('p');
+        // title.innerHTML = reminder.title;
+        // var due_date = document.createElement('p');
+        // due_date.innerHTML = date_string;
+        // var description = document.createElement('p');
+        // description.innerHTML = reminder.description;
+        // reminder_div.appendChild(title);
+        // reminder_div.appendChild(due_date);
+        // reminder_div.appendChild(description);
+        // document.getElementById('reminders').appendChild(reminder_div);
     }
+}
+
+function submit_reminder(reminder) {
+    console.log(reminder);
+    // Get which reminder from id (complete-reminder-ID)
+    var reminder_id = reminder.id.split('-')[2];
+    
+    // Get reminder from reminders array
+    var reminder = reminders[reminder_id];
+    // Send reminder to server
+    // Get hostname and remove http:// or https:// and remove any trailing slashes and remove port
+    var hostname = window.location.hostname;
+    if (hostname.substring(0, 7) == 'http://') {
+        hostname = hostname.substring(7);
+    }
+    else if (hostname.substring(0, 8) == 'https://') {
+        hostname = hostname.substring(8);
+    }
+    while (hostname.substring(hostname.length - 1) == '/') {
+        hostname = hostname.substring(0, hostname.length - 1);
+    }
+
+    var ws = new WebSocket('ws://' + hostname + ':8000');
+
+    // Connection opened
+    ws.addEventListener('open', function (event) {
+        var data = {
+            task: 'complete_reminder',
+            username: user.get_username(),
+            id: reminder_id,
+        };
+        ws.send(JSON.stringify(data));
+    });
+
+    // Listen for messages
+    ws.addEventListener('message', function (event) {
+        console.log('Message from server ', event.data);
+        var message = event.data.split('|');
+        if (message[0] == 'true') {
+            ws.close();
+            // show_alert('alert-success', 'Reminder completed');
+            // remove reminder from reminders array
+            // Iterate through reminders array and remove reminder with id
+            for (var i = 0; i < reminders.length; i++) {
+                if (reminders[i].id == reminder_id) {
+                    reminders.splice(i, 1);
+                    break;
+                }
+            }
+            updateReminders();
+            return true;
+        }
+        else {
+            // If first part of message is false then continue
+            if (event.data.substring(0, 5) == 'false') {
+                // Split message by | and show second part
+                var message = event.data.split('|');
+                show_alert('alert-danger', message[1]);
+                // Uncheck checkbox
+                document.getElementById('complete-reminder-' + id).checked = false;
+                ws.close();
+                return false;
+            }
+        }
+    });
 }
 
 expand_table();
@@ -1063,3 +1145,13 @@ $('#register-modal').on('hidden.bs.modal', function () {
     document.getElementById('passwordreg').value = '';
     document.getElementById('passwordreg2').value = '';
 })
+
+var tooltipTriggerList;
+var tooltipList;
+
+function enable_tooltips() {
+    // Enable tooltips
+    tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+}
