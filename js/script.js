@@ -23,7 +23,7 @@ for (var i = 0; i < items.length; i++) {
 // Template for reminder
 var reminder_template = `
 <!-- Display reminder: Checkmark and title, and then description underneath -->
-<div class="reminder logged-in card" id="reminder1">
+<div class="reminder logged-in card mb-2" id="reminder1">
     <!-- Display check mark -->
     <div class="card-header">
         <input class="form-check-input me-2 lead align-items-center" type="checkbox" id="complete-reminder-{{ID}}" onclick="submit_reminder(this)">
@@ -1009,7 +1009,7 @@ function updateReminders() {
 
             var cell_id = 'cal' + cellnum;
             var cell = document.getElementById(cell_id);
-            cell.innerHTML = reminderHTML;
+            cell.innerHTML += reminderHTML;
         }
 
         enable_tooltips();

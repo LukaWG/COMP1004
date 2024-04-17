@@ -1,3 +1,10 @@
 {
-    "luka": []
+    "luka": [
+        {
+            "date": "2024-04-22",
+            "title": "Reminder",
+            "description": "This is a test reminder",
+            "id": 1
+        }
+    ]
 }
