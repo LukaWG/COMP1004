@@ -223,5 +223,41 @@ wss.on('connection', function connection(ws) {
                 }
             }
         }
+
+        else if (data.task == 'edit_reminder') {
+            var username = data['username'];
+            var reminder = data['reminder'];
+            var id = reminder['id'];
+            var reminderFile = fs.readFileSync('./private/reminders.json', 'utf8');
+            try {
+                var reminderData = JSON.parse(reminderFile);
+            }
+            catch (e) {
+                console.log(e);
+                ws.send('false|Error reading reminder data');
+                return;
+            }
+            if (!reminderData[username]) {
+                ws.send('false|No reminders');
+            }
+            else {
+                var found = false;
+                for (var i = 0; i < reminderData[username].length; i++) {
+                    console.log(reminderData[username][i].id, id)
+                    if (reminderData[username][i].id == id) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    reminderData[username][i] = reminder;
+                    fs.writeFileSync('./private/reminders.json', JSON.stringify(reminderData, null, 4));
+                    ws.send('true|Reminder edited');
+                }
+                else {
+                    ws.send('false|Reminder not found');
+                }
+            }
+        }
     });
 });

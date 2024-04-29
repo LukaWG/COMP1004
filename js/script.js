@@ -23,7 +23,7 @@ for (var i = 0; i < items.length; i++) {
 // Template for reminder
 var reminder_template = `
 <!-- Display reminder: Checkmark and title, and then description underneath -->
-<div class="reminder logged-in card mb-2" id="reminder1">
+<div class="reminder logged-in card mb-2" id="reminder{{ID}}" onclick="edit_reminder({{ID}});">
     <!-- Display check mark -->
     <div class="card-header">
         <input class="form-check-input me-2 lead align-items-center" type="checkbox" id="complete-reminder-{{ID}}" onclick="submit_reminder(this)">
@@ -238,6 +238,7 @@ class Reminder {
         this.date = date;
         this.title = title;
         this.description = description
+        this.completed = false;
     }
 }
 
@@ -305,7 +306,6 @@ function register() {
 
     // Listen for messages
     ws.addEventListener('message', function (event) {
-        console.log('Message from server ', event.data);
         var message = event.data.split('|');
         if (message[0] == 'true') {
             register2(username=message[1], name=message[2]);
@@ -324,8 +324,6 @@ function register() {
         }
     });
     // If got this far then register successful
-
-    console.log("Register successful");
 }
 
 function register2(username=undefined, name=undefined) {
@@ -369,11 +367,9 @@ function find_user(username, password) {
 
     // Listen for messages
     ws.addEventListener('message', function (event) {
-        console.log('Message from server ', event.data);
         // Split event.data by |
         var message = event.data.split('|');
         if (message[0] == 'true') {
-            console.log(`USERNAME IS ${message[1]}, and NAME IS ${message[2]}`);
             login2(true, name=message[2], username=message[1]);
             ws.close();
             return true;
@@ -489,6 +485,7 @@ function logout() {
             items[i].style.color = '#787878';
         }
     }
+    deleteReminders();
 }
 
 function load_calendar() {
@@ -716,7 +713,6 @@ function expand_table() {
 }
 
 function show_alert(type, text) {
-    console.log('show_alert');
     // Clear previous alert timeout
     if (alertTimeout.timeout != undefined) {
         clearTimeout(alertTimeout.timeout);
@@ -738,8 +734,6 @@ function show_alert(type, text) {
     alertTimeout.type = type;
     // Set timeout to hide alert
     alertTimeout.timeout = setTimeout(hide_alert, 3500);
-
-    console.log('show_alert end');
 }
 
 function hide_alert() {
@@ -846,15 +840,12 @@ function newReminder() {
             reminder: reminder,
             attempts: 0,
         };
-        console.log('Sending data');
-        console.log(data);
         ws.send(JSON.stringify(data));
     });
 
     // Listen for messages
 
     ws.addEventListener('message', function (event) {
-        console.log('Message from server ', event.data);
         var message = event.data.split('|');
         if (message[0] == 'true') {
             ws.close();
@@ -902,7 +893,8 @@ function newReminder() {
     document.getElementById('new-reminder-due-date').value = '';
     document.getElementById('new-reminder-description').value = '';
     // Load reminders
-    loadReminders();
+    // deleteReminders();
+    // updateReminders();
 }
 
 function getReminders() {
@@ -932,10 +924,8 @@ function getReminders() {
 
     // Listen for messages
     ws.addEventListener('message', function (event) {
-        console.log('Message from server ', event.data);
         var message = event.data.split('|');
         if (message[0] == 'true') {
-            console.log('Message is true');
             // Split message by |
             var reminders = JSON.parse(message[1]);
             displayReminders(reminders);
@@ -957,6 +947,8 @@ function getReminders() {
 }
 
 function displayReminders(reminderslist) {
+    // Clear reminders array
+    reminders = [];
     // Add reminders to reminders array
     for (var i = 0; i < reminderslist.length; i++) {
         var reminder = new Reminder(reminderslist[i].title, reminderslist[i].date, reminderslist[i].description, reminderslist[i].id);
@@ -966,11 +958,7 @@ function displayReminders(reminderslist) {
 }
 
 function updateReminders() {
-    // Iterate through reminder class and delete
-    var items = document.getElementsByClassName('reminder');
-    while (items.length > 0) {
-        items[0].remove();
-    }
+    deleteReminders();
 
     // Iterate through reminders array and add to reminders class
     for (var i = 0; i < reminders.length; i++) {
@@ -989,13 +977,27 @@ function updateReminders() {
             short_description = reminder.description;
         }
 
-        var reminderHTML = reminder_template.replace('{{ID}}', reminder.id).replace('{{TITLE}}', reminder.title).replace('{{DATE}}', date_string).replace('{{DESCRIPTION_SHORT}}', short_description);
+        var reminderHTML = reminder_template.replace('{{ID}}', reminder.id).replace('{{ID}}', reminder.id).replace('{{ID}}', reminder.id).replace('{{TITLE}}', reminder.title).replace('{{DATE}}', date_string).replace('{{DESCRIPTION_SHORT}}', short_description);
         if (tooltip) {
             reminderHTML = reminderHTML.replace('{{TOOLTIP}}', 'data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="' + reminder.description + '"');
         }
         else {
             reminderHTML = reminderHTML.replace('{{TOOLTIP}}', '');
         }
+
+        // Detect if the reminder is clicked
+
+        // // When reminder is clicked open modal with reminder details so they can be edited (use the same modal as new reminder)
+        // // Get reminder from reminders array
+        // document.getElementById('reminder' + reminder.id).addEventListener('click', function() {
+        //     var reminder = reminders[reminder.id];
+        //     // Set title, due date, and description to reminder values
+        //     document.getElementById('new-reminder-title').value = reminder.title;
+        //     document.getElementById('new-reminder-due-date').value = reminder.date;
+        //     document.getElementById('new-reminder-description').value = reminder.description;
+        //     // Show new reminder modal
+        //     $('#new-reminder-modal').modal('show');
+        // });
 
         // Check if reminder date is displayed in current calendar view
         var monday = calendar_data.monday;
@@ -1029,13 +1031,27 @@ function updateReminders() {
     }
 }
 
+function deleteReminders() {
+    // Iterate through all objects with className reminder and remove from screen
+    var items = document.getElementsByClassName('reminder');
+    while (items.length > 0) {
+        items[0].remove();
+    }
+}
+
 function submit_reminder(reminder) {
-    console.log(reminder);
     // Get which reminder from id (complete-reminder-ID)
     var reminder_id = reminder.id.split('-')[2];
     
-    // Get reminder from reminders array
-    var reminder = reminders[reminder_id];
+    // Iterate through reminders array until id matches
+    var reminder;
+    for (var i = 0; i < reminders.length; i++) {
+        if (reminders[i].id == reminder_id) {
+            reminder = reminders[i];
+            break;
+        }
+    }
+    reminder.completed = true;
     // Send reminder to server
     // Get hostname and remove http:// or https:// and remove any trailing slashes and remove port
     var hostname = window.location.hostname;
@@ -1063,7 +1079,6 @@ function submit_reminder(reminder) {
 
     // Listen for messages
     ws.addEventListener('message', function (event) {
-        console.log('Message from server ', event.data);
         var message = event.data.split('|');
         if (message[0] == 'true') {
             ws.close();
@@ -1094,6 +1109,139 @@ function submit_reminder(reminder) {
     });
 }
 
+function edit_reminder(reminder_id) {
+    // Iterate through reminders array until id matches
+    var reminder;
+    for (var i = 0; i < reminders.length; i++) {
+        if (reminders[i].id == reminder_id) {
+            reminder = reminders[i];
+            break;
+        }
+    }
+
+    // Check if the reminder has been completed (check box ticked or reminder deleted from array, therefore reminder is undefined)
+    if (reminder == undefined) {
+        return;
+    }
+    else if (reminder.completed) {
+        return;
+    }
+
+    // Set title, due date, and description to reminder values
+    document.getElementById('edit-reminder-title').value = reminder.title;
+    document.getElementById('edit-reminder-due-date').value = reminder.date;
+    document.getElementById('edit-reminder-description').value = reminder.description;
+    document.getElementById('edit-reminder-id').value = reminder_id;
+    // Show edit reminder modal
+    $('#edit-reminder-modal').modal('show');
+}
+
+function editReminderSubmit() {
+    // Get title, due date, and description
+    var title = document.getElementById('edit-reminder-title').value;
+    var date = document.getElementById('edit-reminder-due-date').value;
+    var description = document.getElementById('edit-reminder-description').value;
+    var reminder_id = document.getElementById('edit-reminder-id').value;
+
+    // Check that title and due date are not blank
+    if (title == '' || date == '') {
+        // Show alert that title and due date are required
+        show_alert('alert-danger', 'Title and due date are required');
+        return;
+    }
+
+    // Check that title and description do not contain | character
+    if (title.includes('|') || description.includes('|')) {
+        // Show alert that title and description cannot contain |
+        show_alert('alert-danger', 'Title and description cannot contain |');
+        return;
+    }
+
+    // Iterate through remidners array until reminder_id matches
+    var reminder;
+    for (var i = 0; i < reminders.length; i++) {
+        if (reminders[i].id == reminder_id) {
+            reminder = reminders[i];
+            break;
+        }
+    }
+    // Update reminder values
+    reminder.title = title;
+    reminder.date = date;
+    reminder.description = description;
+
+    // Send reminder to server
+    // Get hostname and remove http:// or https:// and remove any trailing slashes and remove port
+    var hostname = window.location.hostname;
+    if (hostname.substring(0, 7) == 'http://') {
+        hostname = hostname.substring(7);
+    }
+    else if (hostname.substring(0, 8) == 'https://') {
+        hostname = hostname.substring(8);
+    }
+    while (hostname.substring(hostname.length - 1) == '/') {
+        hostname = hostname.substring(0, hostname.length - 1);
+    }
+
+    var ws = new WebSocket('ws://' + hostname + ':8000');
+
+    // Connection opened
+    ws.addEventListener('open', function (event) {
+        var data = {
+            task: 'edit_reminder',
+            username: user.get_username(),
+            reminder: reminder,
+            attempts: 0,
+        };
+        ws.send(JSON.stringify(data));
+    });
+
+    // Listen for messages
+
+    ws.addEventListener('message', function (event) {
+        var message = event.data.split('|');
+        if (message[0] == 'true') {
+            ws.close();
+            // call getReminders to update reminders array in 0.5 seconds
+            setTimeout(getReminders, 500);
+            return true;
+        }
+        else {
+            // If first part of message is false then continue
+            if (event.data.substring(0, 5) == 'false') {
+                message = event.data.split('|');
+                // Try again
+                if (message[1] == 'try_again') {
+                    if (message[2] == 'attempts') {
+                        if (message[3] < 3) {
+                            var data = {
+                                task: 'edit_reminder',
+                                username: user.get_username(),
+                                reminder: reminder,
+                                attempts: message[3],
+                            };
+                            ws.send(JSON.stringify(data));
+                        }
+                        else {
+                            show_alert('alert-danger', 'Failed to edit reminder');
+                            ws.close();
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    show_alert('alert-danger', 'Failed to edit reminder');
+                    ws.close();
+                    return false;
+                }
+            }
+        }
+    });
+
+    // Hide edit reminder modal
+    $('#edit-reminder-modal').modal('hide');
+}
+
 expand_table();
 load_calendar();
 
@@ -1105,32 +1253,42 @@ document.getElementById('log-in-button').style.width = width + 'px';
 document.getElementById('log-out-button').style.display = 'none';
 document.getElementById('log-in-button').style.display = 'block';
 
-var login_form = document.getElementById('login-form');
-login_form.addEventListener('submit', function(event) {
-    event.preventDefault();
-    login();
-});
-
-// Detect when enter is clicked within login_form
-login_form.addEventListener('keyup', function(event) {
-    if (event.code == 'Enter') {
+try {
+    var login_form = document.getElementById('login-form');
+    login_form.addEventListener('submit', function(event) {
         event.preventDefault();
         login();
-    }
-});
+    });
 
-var register_form = document.getElementById('register-form');
-register_form.addEventListener('submit', function(event) {
-    event.preventDefault();
-    register();
-});
-// Detect when enter is clicked within register_form
-register_form.addEventListener('keyup', function(event) {
-    if (event.code == 'Enter') {
+    // Detect when enter is clicked within login_form
+    login_form.addEventListener('keyup', function(event) {
+        if (event.code == 'Enter') {
+            event.preventDefault();
+            login();
+        }
+    });
+}
+catch (error) {
+    console.log('No login form found');
+};
+
+try {
+    var register_form = document.getElementById('register-form');
+    register_form.addEventListener('submit', function(event) {
         event.preventDefault();
         register();
-    }
-});
+    });
+    // Detect when enter is clicked within register_form
+    register_form.addEventListener('keyup', function(event) {
+        if (event.code == 'Enter') {
+            event.preventDefault();
+            register();
+        }
+    });
+}
+catch (error) {
+    console.log('No register form found');
+}
 
 $('#log-in-modal').on('hidden.bs.modal', function () {
     // Remove text from input boxes
@@ -1144,6 +1302,13 @@ $('#register-modal').on('hidden.bs.modal', function () {
     document.getElementById('usernamereg').value = '';
     document.getElementById('passwordreg').value = '';
     document.getElementById('passwordreg2').value = '';
+})
+
+$('#edit-reminder-modal').on('hidden.bs.modal', function () {
+    // Remove text from input boxes
+    document.getElementById('edit-reminder-title').value = '';
+    document.getElementById('edit-reminder-due-date').value = '';
+    document.getElementById('edit-reminder-description').value = '';
 })
 
 var tooltipTriggerList;
