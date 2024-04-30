@@ -1,3 +1,11 @@
 {
-    "luka": []
+    "luka": [
+        {
+            "id": 1,
+            "date": "2024-05-01",
+            "title": "Example Reminder",
+            "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            "completed": false
+        }
+    ]
 }
