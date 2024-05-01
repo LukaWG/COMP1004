@@ -85,6 +85,7 @@ wss.on('connection', function connection(ws) {
                 }
             }
         }
+        
         else if (data.task == 'register') {
             var name = data['name'];
             var username = data['username'];
@@ -127,6 +128,7 @@ wss.on('connection', function connection(ws) {
                 ws.send(`true|${username}|${name}`);
             }
         }
+
         else if (data.task == 'new_reminder') {
             var username = data['username'];
             var reminder = data['reminder'];
@@ -170,6 +172,7 @@ wss.on('connection', function connection(ws) {
             fs.writeFileSync('./private/reminders.json', JSON.stringify(reminderData, null, 4));
             ws.send('true|Reminder added');
         }
+
         else if (data.task == 'get_reminders') {
             var username = data['username'];
             var reminderFile = fs.readFileSync('./private/reminders.json', 'utf8');
