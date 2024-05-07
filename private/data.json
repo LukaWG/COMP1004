@@ -4,36 +4,6 @@
             "name": "Luka",
             "username": "luka",
             "password": "password"
-        },
-        {
-            "name": "Test User",
-            "username": "test",
-            "password": "pass"
-        },
-        {
-            "name": "Test User2",
-            "username": "test2",
-            "password": "pass"
-        },
-        {
-            "name": "Test User3",
-            "username": "test3",
-            "password": "pass"
-        },
-        {
-            "name": "Test User4",
-            "username": "test4",
-            "password": "pass"
-        },
-        {
-            "name": "Luka",
-            "username": "lwg",
-            "password": "password"
-        },
-        {
-            "name": "test",
-            "username": "user",
-            "password": "test"
         }
     ]
 }
